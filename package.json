@@ -4,7 +4,8 @@
     "db:link": "supabase link",
     "db:push": "supabase db push",
     "db:push:dry-run": "supabase db push --dry-run",
-    "db:migration": "supabase migration new"
+    "db:migration": "supabase migration new",
+    "smoke:e2e": "node tools/e2e-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0"

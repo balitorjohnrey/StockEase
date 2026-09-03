@@ -239,7 +239,7 @@ as $$
 declare
   cart_line record;
   product_row public.products%rowtype;
-  sale_id uuid;
+  v_sale_id uuid;
   receipt text;
   trusted_total numeric(12, 2) := 0;
   trusted_profit numeric(12, 2) := 0;
@@ -322,7 +322,7 @@ begin
     p_cash_received - trusted_total,
     trusted_profit
   )
-  returning id into sale_id;
+  returning id into v_sale_id;
 
   for cart_line in
     select product_id, sum(quantity)::integer as quantity
@@ -351,7 +351,7 @@ begin
       gross_profit
     )
     values (
-      sale_id,
+      v_sale_id,
       product_row.id,
       product_row.name,
       product_row.sku,
@@ -382,7 +382,7 @@ begin
       'sale',
       -cart_line.quantity,
       'Sale ' || receipt,
-      sale_id
+      v_sale_id
     );
   end loop;
 
@@ -402,10 +402,10 @@ begin
   ), '[]'::jsonb)
   into receipt_items
   from public.sale_items si
-  where si.sale_id = sale_id;
+  where si.sale_id = v_sale_id;
 
   return jsonb_build_object(
-    'sale_id', sale_id,
+    'sale_id', v_sale_id,
     'business_name', business_name,
     'receipt_number', receipt,
     'date_time', now(),

@@ -78,6 +78,14 @@ Create a new migration for every schema, RPC, or RLS change:
 npm run db:migration -- your_change_name
 ```
 
+Run a live smoke test against Supabase:
+
+```powershell
+npm run smoke:e2e
+```
+
+This creates a disposable test user and clearly named test business in the hosted Supabase project, then verifies signup, login, business setup, inventory, restock, checkout, sales history, expenses, and product deactivation.
+
 Never place a database password or Supabase service-role secret in the Flutter app.
 
 ## Included Features
