@@ -289,16 +289,16 @@ class _SignUpFormState extends State<SignUpForm> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final signedIn = await context.appState.signUp(
+      await context.appState.signUp(
         email: _email.text.trim(),
         password: _password.text,
       );
-      if (!signedIn && mounted) {
-        showAppSnackBar(
-          context,
-          'Account created. Check your email if confirmation is enabled.',
-        );
-      }
+      if (!mounted) return;
+      widget.onShowLogin();
+      showAppSnackBar(
+        context,
+        'Account created. Log in with your email and password.',
+      );
     } catch (error) {
       if (mounted) showAppSnackBar(context, error.toString(), isError: true);
     } finally {

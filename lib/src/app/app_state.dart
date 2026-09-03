@@ -72,20 +72,18 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  Future<bool> signUp({
+  Future<void> signUp({
     required String email,
     required String password,
   }) async {
-    var signedIn = false;
     await _guard(() async {
       final response = await auth.signUp(email: email, password: password);
-      _session = response.session;
-      signedIn = response.session != null;
-      if (signedIn) {
-        await _loadBusiness();
+      if (response.session != null) {
+        await auth.signOut();
       }
+      _session = null;
+      _business = null;
     });
-    return signedIn;
   }
 
   Future<void> createBusiness(String name) async {
