@@ -2,26 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'src/app/stock_ease_app.dart';
-import 'src/config/supabase_config.dart';
 import 'src/theme/app_theme.dart';
 import 'src/widgets/app_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!SupabaseConfig.isConfigured) {
-    runApp(const MissingConfigurationApp());
-    return;
-  }
-
+  // Initialize Supabase directly with your URL and Key
   await Supabase.initialize(
-    url: SupabaseConfig.url,
-    publishableKey: SupabaseConfig.anonKey,
+    url: 'https://dscjwdkwubcqxytulqml.supabase.co',
+    // Note: If you get a compilation error here, change 'publishableKey' to 'anonKey'
+    publishableKey: 'sb_publishable_n7RFrDOkSD-mBr2PCDhNaA_M2U_j0W8', 
   );
 
   runApp(const StockEaseApp());
 }
 
+// You can safely leave this here, or delete it entirely since it's no longer being called.
 class MissingConfigurationApp extends StatelessWidget {
   const MissingConfigurationApp({super.key});
 
