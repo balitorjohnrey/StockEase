@@ -345,6 +345,8 @@ class FloatingIconField extends StatelessWidget {
                   labelText: labelText,
                   contentPadding: const EdgeInsets.fromLTRB(28, 14, 16, 14),
                   suffixIcon: suffixIcon,
+                  errorMaxLines: 2,
+                  errorStyle: const TextStyle(fontSize: 11, height: 1.2),
                 ),
               ),
             ),
