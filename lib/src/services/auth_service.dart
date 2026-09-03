@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -20,7 +21,11 @@ class AuthService {
     required String email,
     required String password,
   }) {
-    return _client.auth.signUp(email: email, password: password);
+    return _client.auth.signUp(
+      email: email,
+      password: password,
+      emailRedirectTo: kIsWeb ? '${Uri.base.origin}/' : null,
+    );
   }
 
   Future<void> signOut() {

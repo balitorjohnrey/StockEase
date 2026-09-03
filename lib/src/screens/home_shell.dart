@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app/app_scope.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_widgets.dart';
 import 'dashboard_screen.dart';
 import 'inventory_screens.dart';
 import 'reports_screens.dart';
@@ -44,7 +45,14 @@ class _HomeShellState extends State<HomeShell> {
         final useRail = constraints.maxWidth >= 900;
         final body = Scaffold(
           appBar: AppBar(
-            title: Text(state.business?.name ?? 'StockEase'),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const BrandLogo(size: 32),
+                const SizedBox(width: 10),
+                Text(state.business?.name ?? 'StockEase'),
+              ],
+            ),
             actions: [
               IconButton(
                 tooltip: 'Low-stock products',
@@ -78,6 +86,7 @@ class _HomeShellState extends State<HomeShell> {
         if (!useRail) return body;
 
         return Scaffold(
+          backgroundColor: AppTheme.sky,
           body: Row(
             children: [
               NavigationRail(
@@ -86,14 +95,10 @@ class _HomeShellState extends State<HomeShell> {
                   setState(() => _index = value);
                 },
                 labelType: NavigationRailLabelType.all,
-                backgroundColor: AppTheme.surface,
+                backgroundColor: Colors.white,
                 leading: const Padding(
                   padding: EdgeInsets.only(top: 12, bottom: 18),
-                  child: Icon(
-                    Icons.inventory_2_outlined,
-                    color: AppTheme.primary,
-                    size: 32,
-                  ),
+                  child: BrandLogo(size: 48),
                 ),
                 destinations: [
                   for (final destination in _destinations)

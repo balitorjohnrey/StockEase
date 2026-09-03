@@ -38,12 +38,24 @@ flutter run --dart-define=SUPABASE_URL=https://dscjwdkwubcqxytulqml.supabase.co 
 For web/Chrome specifically:
 
 ```powershell
-flutter run -d chrome --dart-define=SUPABASE_URL=https://dscjwdkwubcqxytulqml.supabase.co --dart-define=SUPABASE_ANON_KEY=sb_publishable_n7RFrDOkSD-mBr2PCDhNaA_M2U_j0W8
+flutter run -d chrome --web-port 4572 --dart-define=SUPABASE_URL=https://dscjwdkwubcqxytulqml.supabase.co --dart-define=SUPABASE_ANON_KEY=sb_publishable_n7RFrDOkSD-mBr2PCDhNaA_M2U_j0W8
 ```
 
 If VS Code is used, select **StockEase Web (Supabase)** or **StockEase Android (Supabase)** from Run and Debug.
 
 If the app shows "StockEase needs Supabase settings", stop the current Flutter run with `Ctrl+C` and relaunch using one of the commands above.
+
+## Email Confirmation Redirects
+
+For local web testing, keep Flutter running on port `4572` and configure Supabase Auth to redirect there:
+
+1. Open your Supabase project dashboard.
+2. Go to **Authentication** > **URL Configuration**.
+3. Set **Site URL** to `http://localhost:4572`.
+4. Add **Redirect URL** `http://localhost:4572/**`.
+5. Save, then create a new account or resend the confirmation email.
+
+If a confirmation link still says "localhost refused to connect", it was probably generated before this setting changed. Send a fresh confirmation email and make sure Flutter is running when you click the link.
 
 Use the same `--dart-define` values for release builds:
 

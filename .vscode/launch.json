@@ -8,6 +8,7 @@
       "flutterMode": "debug",
       "deviceId": "chrome",
       "toolArgs": [
+        "--web-port=4572",
         "--dart-define=SUPABASE_URL=https://dscjwdkwubcqxytulqml.supabase.co",
         "--dart-define=SUPABASE_ANON_KEY=sb_publishable_n7RFrDOkSD-mBr2PCDhNaA_M2U_j0W8"
       ]

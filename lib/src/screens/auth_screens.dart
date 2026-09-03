@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app/app_scope.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_widgets.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -16,54 +17,68 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.sky,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Card(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(36),
+                  boxShadow: AppTheme.strongShadow,
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.fromLTRB(28, 42, 28, 30),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.inventory_2_outlined, size: 48),
-                      const SizedBox(height: 12),
+                      if (_showSignUp)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            tooltip: 'Back to login',
+                            onPressed: () =>
+                                setState(() => _showSignUp = false),
+                            icon: const Icon(Icons.arrow_back_ios_new),
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                      const Center(child: BrandLogo(size: 82)),
+                      const SizedBox(height: 20),
                       Text(
-                        'StockEase',
+                        _showSignUp ? 'Welcome!' : 'Welcome back!',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              color: AppTheme.muted,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         _showSignUp
-                            ? 'Create your business account.'
-                            : 'Sign in to manage sales and stock.',
+                            ? 'Create your account'
+                            : 'Login to your account',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const SizedBox(height: 24),
-                      SegmentedButton<bool>(
-                        segments: const [
-                          ButtonSegment(
-                            value: false,
-                            icon: Icon(Icons.login),
-                            label: Text('Login'),
-                          ),
-                          ButtonSegment(
-                            value: true,
-                            icon: Icon(Icons.person_add_alt),
-                            label: Text('Sign up'),
-                          ),
-                        ],
-                        selected: {_showSignUp},
-                        onSelectionChanged: (value) {
-                          setState(() => _showSignUp = value.first);
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      _showSignUp ? const SignUpForm() : const LoginForm(),
+                      _showSignUp
+                          ? SignUpForm(
+                              onShowLogin: () {
+                                setState(() => _showSignUp = false);
+                              },
+                            )
+                          : LoginForm(
+                              onShowSignUp: () {
+                                setState(() => _showSignUp = true);
+                              },
+                            ),
                     ],
                   ),
                 ),
@@ -77,7 +92,9 @@ class _AuthScreenState extends State<AuthScreen> {
 }
 
 class LoginForm extends StatefulWidget {
-  const LoginForm({super.key});
+  const LoginForm({required this.onShowSignUp, super.key});
+
+  final VoidCallback onShowSignUp;
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -104,28 +121,24 @@ class _LoginFormState extends State<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
+          FloatingIconField(
             controller: _email,
+            icon: Icons.person_outline,
+            labelText: 'Email',
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.mail_outline),
-            ),
             validator: _validateEmail,
           ),
-          const SizedBox(height: 14),
-          TextFormField(
+          const SizedBox(height: 18),
+          FloatingIconField(
             controller: _password,
+            icon: Icons.lock_outline,
+            labelText: 'Password',
             obscureText: _obscure,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                tooltip: _obscure ? 'Show password' : 'Hide password',
-                icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
+            suffixIcon: IconButton(
+              tooltip: _obscure ? 'Show password' : 'Hide password',
+              icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() => _obscure = !_obscure),
             ),
             validator: _validatePassword,
             onFieldSubmitted: (_) => _submit(),
@@ -140,6 +153,20 @@ class _LoginFormState extends State<LoginForm> {
                   )
                 : const Icon(Icons.login),
             label: const Text('Login'),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Don't have an account?",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              TextButton(
+                onPressed: widget.onShowSignUp,
+                child: const Text('Sign up here'),
+              ),
+            ],
           ),
         ],
       ),
@@ -163,7 +190,9 @@ class _LoginFormState extends State<LoginForm> {
 }
 
 class SignUpForm extends StatefulWidget {
-  const SignUpForm({super.key});
+  const SignUpForm({required this.onShowLogin, super.key});
+
+  final VoidCallback onShowLogin;
 
   @override
   State<SignUpForm> createState() => _SignUpFormState();
@@ -192,40 +221,34 @@ class _SignUpFormState extends State<SignUpForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
+          FloatingIconField(
             controller: _email,
+            icon: Icons.mail_outline,
+            labelText: 'Email',
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.mail_outline),
-            ),
             validator: _validateEmail,
           ),
-          const SizedBox(height: 14),
-          TextFormField(
+          const SizedBox(height: 18),
+          FloatingIconField(
             controller: _password,
+            icon: Icons.lock_outline,
+            labelText: 'Password',
             obscureText: _obscure,
             textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                tooltip: _obscure ? 'Show password' : 'Hide password',
-                icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
+            suffixIcon: IconButton(
+              tooltip: _obscure ? 'Show password' : 'Hide password',
+              icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() => _obscure = !_obscure),
             ),
             validator: _validatePassword,
           ),
-          const SizedBox(height: 14),
-          TextFormField(
+          const SizedBox(height: 18),
+          FloatingIconField(
             controller: _confirm,
+            icon: Icons.lock_reset,
+            labelText: 'Confirm password',
             obscureText: _obscure,
-            decoration: const InputDecoration(
-              labelText: 'Confirm password',
-              prefixIcon: Icon(Icons.lock_reset),
-            ),
             validator: (value) {
               if (value != _password.text) return 'Passwords do not match.';
               return null;
@@ -242,6 +265,20 @@ class _SignUpFormState extends State<SignUpForm> {
                   )
                 : const Icon(Icons.person_add_alt),
             label: const Text('Create account'),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Already have an account?',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              TextButton(
+                onPressed: widget.onShowLogin,
+                child: const Text('Login here'),
+              ),
+            ],
           ),
         ],
       ),

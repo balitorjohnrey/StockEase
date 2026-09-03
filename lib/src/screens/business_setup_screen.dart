@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app/app_scope.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_widgets.dart';
 
 class BusinessSetupScreen extends StatefulWidget {
@@ -24,27 +25,39 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.sky,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
-              child: Card(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(36),
+                  boxShadow: AppTheme.strongShadow,
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.fromLTRB(28, 42, 28, 30),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.storefront, size: 52),
-                        const SizedBox(height: 16),
+                        const Center(child: BrandLogo(size: 82)),
+                        const SizedBox(height: 20),
                         Text(
                           'Set up your business',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                color: AppTheme.muted,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -53,12 +66,10 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 24),
-                        TextFormField(
+                        FloatingIconField(
                           controller: _businessName,
-                          decoration: const InputDecoration(
-                            labelText: 'Business name',
-                            prefixIcon: Icon(Icons.badge_outlined),
-                          ),
+                          icon: Icons.storefront,
+                          labelText: 'Business name',
                           textInputAction: TextInputAction.done,
                           validator: (value) {
                             if ((value ?? '').trim().isEmpty) {
