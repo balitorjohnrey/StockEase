@@ -10,7 +10,9 @@ This repository is configured to deploy the Flutter web app with GitHub Pages:
 https://balitorjohnrey.github.io/StockEase/
 ```
 
-Push to `main`, then check the repository's **Actions** tab for the `Deploy Flutter Web` workflow. If GitHub asks for a Pages source, set **Settings** > **Pages** > **Source** to **GitHub Actions**.
+Push to `main`, then check the repository's **Actions** tab for the `Deploy Flutter Web` workflow. The workflow builds Flutter web and publishes the result to the `gh-pages` branch.
+
+If GitHub asks for a Pages source, set **Settings** > **Pages** > **Source** to **Deploy from a branch**, then choose `gh-pages` and `/ (root)`.
 
 ## Setup
 
