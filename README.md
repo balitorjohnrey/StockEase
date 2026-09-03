@@ -35,6 +35,16 @@ The initial backend migration is in `supabase/migrations/20260903000000_initial_
 flutter run --dart-define=SUPABASE_URL=https://dscjwdkwubcqxytulqml.supabase.co --dart-define=SUPABASE_ANON_KEY=sb_publishable_n7RFrDOkSD-mBr2PCDhNaA_M2U_j0W8
 ```
 
+For web/Chrome specifically:
+
+```powershell
+flutter run -d chrome --dart-define=SUPABASE_URL=https://dscjwdkwubcqxytulqml.supabase.co --dart-define=SUPABASE_ANON_KEY=sb_publishable_n7RFrDOkSD-mBr2PCDhNaA_M2U_j0W8
+```
+
+If VS Code is used, select **StockEase Web (Supabase)** or **StockEase Android (Supabase)** from Run and Debug.
+
+If the app shows "StockEase needs Supabase settings", stop the current Flutter run with `Ctrl+C` and relaunch using one of the commands above.
+
 Use the same `--dart-define` values for release builds:
 
 ```powershell
