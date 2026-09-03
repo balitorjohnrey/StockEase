@@ -15,9 +15,19 @@ flutter config --enable-web
 
 ```powershell
 flutter pub get
+npm install
 ```
 
-3. Run the SQL in `supabase/schema.sql` in your Supabase SQL editor.
+3. Link and push the Supabase backend:
+
+```powershell
+npm run supabase -- login
+npm run supabase -- link --project-ref dscjwdkwubcqxytulqml
+npm run db:push:dry-run
+npm run db:push
+```
+
+The initial backend migration is in `supabase/migrations/20260903000000_initial_stockease_schema.sql`. The same SQL is also kept in `supabase/schema.sql` for easy review. If you do not want to use the CLI, paste `supabase/schema.sql` into the Supabase SQL editor for the first setup.
 
 4. Run the app with your Supabase project URL and publishable key:
 
@@ -33,6 +43,21 @@ flutter build apk --dart-define=SUPABASE_URL=YOUR_URL --dart-define=SUPABASE_ANO
 ```
 
 Never place a database password or Supabase service-role secret in the Flutter app.
+
+## Database Changes
+
+Create a new migration for every schema/RPC/RLS change:
+
+```powershell
+npm run db:migration -- your_change_name
+```
+
+Edit the new SQL file under `supabase/migrations/`, then push it:
+
+```powershell
+npm run db:push:dry-run
+npm run db:push
+```
 
 ## Included Features
 

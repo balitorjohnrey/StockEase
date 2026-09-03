@@ -1,5 +1,15 @@
 {
+  "scripts": {
+    "supabase": "supabase",
+    "db:link": "supabase link",
+    "db:push": "supabase db push",
+    "db:push:dry-run": "supabase db push --dry-run",
+    "db:migration": "supabase migration new"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.116.0"
   }
 }
