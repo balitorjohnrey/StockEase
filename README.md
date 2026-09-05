@@ -93,7 +93,7 @@ Never place a database password or Supabase service-role secret in the Flutter a
 - Email/password login and sign-up with persistent Supabase sessions.
 - Business setup tied to the authenticated user.
 - Dashboard metrics, recent sales, low-stock counts, and sales charts.
-- Inventory search, product creation/editing, deactivation, price updates, restocking, and stock-movement history.
+- Inventory search, product creation/editing, automatic unique SKU/barcode generation, deactivation, price updates, restocking, and stock-movement history.
 - Cashier cart, checkout, secure `complete_sale` RPC, duplicate-submit prevention, receipt display, and sales history.
 - Low-stock alerts, best-selling product reports, expenses, profit summaries, and business/account settings.
 

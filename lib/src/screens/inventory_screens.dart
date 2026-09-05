@@ -414,7 +414,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   title: _editing ? 'Product details' : 'New product',
                   subtitle: _editing
                       ? 'Price changes affect new sales only.'
-                      : 'Initial stock is saved with the product.',
+                      : 'SKU and barcode are generated automatically.',
                 ),
                 const SizedBox(height: 18),
                 LayoutBuilder(
@@ -441,12 +441,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           controller: _sku,
                           label: 'SKU',
                           icon: Icons.tag,
+                          hintText: 'Generated after save',
+                          readOnly: true,
                           width: wide ? 220 : constraints.maxWidth,
                         ),
                         _field(
                           controller: _barcode,
                           label: 'Barcode',
                           icon: Icons.qr_code_2,
+                          hintText: 'Generated after save',
+                          readOnly: true,
                           width: wide ? 220 : constraints.maxWidth,
                         ),
                         _field(
@@ -531,6 +535,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     required IconData icon,
     double? width,
     bool enabled = true,
+    bool readOnly = false,
+    String? hintText,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
@@ -539,11 +545,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       child: TextFormField(
         controller: controller,
         enabled: enabled,
+        readOnly: readOnly,
         keyboardType: keyboardType,
         inputFormatters: keyboardType == TextInputType.number
             ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
             : null,
-        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hintText,
+          prefixIcon: Icon(icon),
+        ),
         validator: validator,
       ),
     );
@@ -555,8 +566,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     final input = ProductInput(
       name: _name.text,
       categoryName: _category.text,
-      sku: _sku.text,
-      barcode: _barcode.text,
+      sku: _editing ? _sku.text : null,
+      barcode: _editing ? _barcode.text : null,
       costPrice: double.parse(_cost.text),
       sellingPrice: double.parse(_selling.text),
       stockQuantity: int.parse(_stock.text),

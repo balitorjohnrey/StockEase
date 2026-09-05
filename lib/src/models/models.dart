@@ -148,8 +148,8 @@ class ProductInput {
 
   final String name;
   final String categoryName;
-  final String sku;
-  final String barcode;
+  final String? sku;
+  final String? barcode;
   final double costPrice;
   final double sellingPrice;
   final int stockQuantity;
@@ -161,12 +161,17 @@ class ProductInput {
     required String? categoryId,
     bool includeStock = true,
   }) {
+    final cleanedSku = sku?.trim();
+    final cleanedBarcode = barcode?.trim();
+
     return {
       'business_id': businessId,
       'category_id': categoryId,
       'name': name.trim(),
-      'sku': sku.trim().isEmpty ? null : sku.trim(),
-      'barcode': barcode.trim().isEmpty ? null : barcode.trim(),
+      'sku': cleanedSku == null || cleanedSku.isEmpty ? null : cleanedSku,
+      'barcode': cleanedBarcode == null || cleanedBarcode.isEmpty
+          ? null
+          : cleanedBarcode,
       'cost_price': costPrice,
       'selling_price': sellingPrice,
       if (includeStock) 'stock_quantity': stockQuantity,

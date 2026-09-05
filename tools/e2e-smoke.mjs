@@ -17,7 +17,6 @@ const stamp = new Date()
 const email = `stockease.e2e+${stamp}@example.com`;
 const password = `StockEase-${stamp}!`;
 const businessName = `StockEase E2E ${stamp}`;
-const sku = `E2E-${stamp}`;
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
@@ -91,7 +90,6 @@ const productInsert = await supabase
     business_id: business.id,
     category_id: categoryInsert.data.id,
     name: 'E2E Canned Goods',
-    sku,
     cost_price: 25,
     selling_price: 40,
     stock_quantity: 5,
@@ -102,7 +100,9 @@ const productInsert = await supabase
 failOnError(productInsert, 'Product insert failed');
 const product = productInsert.data;
 assert(product?.stock_quantity === 5, 'Product stock did not start at 5');
-ok('product insert works');
+assert(product?.sku, 'Product insert did not generate an SKU');
+assert(product?.barcode, 'Product insert did not generate a barcode');
+ok(`product insert generates SKU ${product.sku} and barcode ${product.barcode}`);
 
 const restock = await supabase.rpc('restock_product', {
   p_business_id: business.id,
