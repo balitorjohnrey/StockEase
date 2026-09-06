@@ -4,6 +4,7 @@ import '../models/models.dart';
 import '../utils/formatters.dart';
 import 'expenses_repository.dart';
 import 'inventory_repository.dart';
+import 'repository_helpers.dart';
 
 enum BestSellerRange { today, week, month, allTime }
 
@@ -46,31 +47,28 @@ class SalesRepository {
     DateTime? toUtc,
     int limit = 200,
   }) async {
-    dynamic query =
-        _client.from('sales').select(_saleSelect).eq('business_id', businessId);
+    final trimmed = search.trim();
+    var query = _salesQuery(
+      businessId: businessId,
+      fromUtc: fromUtc,
+      toUtc: toUtc,
+    );
 
-    if (fromUtc != null) {
-      query = query.gte('created_at', fromUtc.toIso8601String());
-    }
-    if (toUtc != null) {
-      query = query.lt('created_at', toUtc.toIso8601String());
-    }
-
-    final rows = await query.order('created_at', ascending: false).limit(limit)
-        as List<dynamic>;
-
-    var sales = [for (final row in rows) SaleSummary.fromJson(readMap(row))];
-    final trimmed = search.trim().toLowerCase();
     if (trimmed.isNotEmpty) {
-      sales = sales.where((sale) {
-        final receiptMatch = sale.receiptNumber.toLowerCase().contains(trimmed);
-        final productMatch = sale.items.any(
-          (item) => item.productName.toLowerCase().contains(trimmed),
-        );
-        return receiptMatch || productMatch;
-      }).toList();
+      final saleIds = await _matchingSaleIds(
+        businessId: businessId,
+        search: trimmed,
+        fromUtc: fromUtc,
+        toUtc: toUtc,
+      );
+      if (saleIds.isEmpty) return const [];
+      query = query.inFilter('id', saleIds.toList());
     }
-    return sales;
+
+    return mapRows(
+      query.order('created_at', ascending: false).limit(limit),
+      SaleSummary.fromJson,
+    );
   }
 
   Future<Receipt> fetchReceipt({
@@ -79,12 +77,14 @@ class SalesRepository {
     required String businessName,
   }) async {
     final row = await _client
-        .from('sales')
-        .select(_saleSelect)
-        .eq('business_id', businessId)
+        .selectBusinessRows(
+          'sales',
+          businessId: businessId,
+          columns: _saleSelect,
+        )
         .eq('id', saleId)
         .single();
-    final data = readMap(row);
+    final data = {...row};
     data['business_name'] = businessName;
     return Receipt.fromJson(data);
   }
@@ -213,5 +213,96 @@ class SalesRepository {
           value: entry.value,
         ),
     ];
+  }
+
+  PostgrestFilterBuilder<PostgrestList> _salesQuery({
+    required String businessId,
+    DateTime? fromUtc,
+    DateTime? toUtc,
+  }) {
+    var query = _client.selectBusinessRows(
+      'sales',
+      businessId: businessId,
+      columns: _saleSelect,
+    );
+
+    if (fromUtc != null) {
+      query = query.gte('created_at', fromUtc.toIso8601String());
+    }
+    if (toUtc != null) {
+      query = query.lt('created_at', toUtc.toIso8601String());
+    }
+
+    return query;
+  }
+
+  Future<Set<String>> _matchingSaleIds({
+    required String businessId,
+    required String search,
+    DateTime? fromUtc,
+    DateTime? toUtc,
+  }) async {
+    final pattern = ilikeContainsPattern(search);
+
+    final results = await Future.wait<PostgrestList>([
+      _salesMetadataQuery(
+        businessId: businessId,
+        fromUtc: fromUtc,
+        toUtc: toUtc,
+      ).ilike('receipt_number', pattern),
+      _saleItemsForSalesQuery(
+        businessId: businessId,
+        fromUtc: fromUtc,
+        toUtc: toUtc,
+      ).ilike('product_name_snapshot', pattern),
+    ]);
+
+    return {
+      for (final row in results.first) row['id'].toString(),
+      for (final row in results.last) row['sale_id'].toString(),
+    };
+  }
+
+  PostgrestFilterBuilder<PostgrestList> _salesMetadataQuery({
+    required String businessId,
+    DateTime? fromUtc,
+    DateTime? toUtc,
+  }) {
+    var query = _client.selectBusinessRows(
+      'sales',
+      businessId: businessId,
+      columns: 'id',
+    );
+
+    if (fromUtc != null) {
+      query = query.gte('created_at', fromUtc.toIso8601String());
+    }
+    if (toUtc != null) {
+      query = query.lt('created_at', toUtc.toIso8601String());
+    }
+
+    return query;
+  }
+
+  PostgrestFilterBuilder<PostgrestList> _saleItemsForSalesQuery({
+    required String businessId,
+    DateTime? fromUtc,
+    DateTime? toUtc,
+  }) {
+    var query = _client
+        .selectRows(
+          'sale_items',
+          columns: 'sale_id,sales!inner(business_id,created_at)',
+        )
+        .eq('sales.business_id', businessId);
+
+    if (fromUtc != null) {
+      query = query.gte('sales.created_at', fromUtc.toIso8601String());
+    }
+    if (toUtc != null) {
+      query = query.lt('sales.created_at', toUtc.toIso8601String());
+    }
+
+    return query;
   }
 }

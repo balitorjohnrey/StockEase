@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import 'repository_helpers.dart';
 
 class InventoryRepository {
   InventoryRepository(this._client);
@@ -14,12 +15,12 @@ class InventoryRepository {
   ''';
 
   Future<List<Category>> fetchCategories(String businessId) async {
-    final rows = await _client
-        .from('categories')
-        .select()
-        .eq('business_id', businessId)
-        .order('name') as List<dynamic>;
-    return [for (final row in rows) Category.fromJson(readMap(row))];
+    return mapRows(
+      _client.selectBusinessRows('categories', businessId: businessId).order(
+            'name',
+          ),
+      Category.fromJson,
+    );
   }
 
   Future<List<Product>> fetchProducts(
@@ -29,10 +30,11 @@ class InventoryRepository {
     bool lowStockOnly = false,
     bool outOfStockOnly = false,
   }) async {
-    dynamic query = _client
-        .from('products')
-        .select(_productSelect)
-        .eq('business_id', businessId);
+    var query = _client.selectBusinessRows(
+      'products',
+      businessId: businessId,
+      columns: _productSelect,
+    );
 
     if (activeOnly) {
       query = query.eq('is_active', true);
@@ -40,14 +42,15 @@ class InventoryRepository {
 
     final trimmedSearch = search.trim();
     if (trimmedSearch.isNotEmpty) {
-      final value = trimmedSearch.replaceAll(',', ' ');
       query = query.or(
-        'name.ilike.%$value%,sku.ilike.%$value%,barcode.ilike.%$value%',
+        ilikeAnyFilter(
+          columns: const ['name', 'sku', 'barcode'],
+          value: trimmedSearch,
+        ),
       );
     }
 
-    final rows = await query.order('name') as List<dynamic>;
-    var products = [for (final row in rows) Product.fromJson(readMap(row))];
+    var products = await mapRows(query.order('name'), Product.fromJson);
 
     if (lowStockOnly) {
       products = products.where((product) => product.isLowStock).toList();
@@ -64,13 +67,17 @@ class InventoryRepository {
     required String businessId,
     required String productId,
   }) async {
-    final row = await _client
-        .from('products')
-        .select(_productSelect)
-        .eq('business_id', businessId)
-        .eq('id', productId)
-        .single();
-    return Product.fromJson(readMap(row));
+    return mapSingleRow(
+      _client
+          .selectBusinessRows(
+            'products',
+            businessId: businessId,
+            columns: _productSelect,
+          )
+          .eq('id', productId)
+          .single(),
+      Product.fromJson,
+    );
   }
 
   Future<Product> createProduct({
@@ -82,13 +89,14 @@ class InventoryRepository {
       name: input.categoryName,
     );
 
-    final row = await _client
-        .from('products')
-        .insert(input.toJson(businessId: businessId, categoryId: categoryId))
-        .select(_productSelect)
-        .single();
-
-    return Product.fromJson(readMap(row));
+    return mapSingleRow(
+      _client
+          .from('products')
+          .insert(input.toJson(businessId: businessId, categoryId: categoryId))
+          .select(_productSelect)
+          .single(),
+      Product.fromJson,
+    );
   }
 
   Future<Product> updateProduct({
@@ -101,21 +109,22 @@ class InventoryRepository {
       name: input.categoryName,
     );
 
-    final row = await _client
-        .from('products')
-        .update(
-          input.toJson(
-            businessId: businessId,
-            categoryId: categoryId,
-            includeStock: false,
-          ),
-        )
-        .eq('business_id', businessId)
-        .eq('id', productId)
-        .select(_productSelect)
-        .single();
-
-    return Product.fromJson(readMap(row));
+    return mapSingleRow(
+      _client
+          .from('products')
+          .update(
+            input.toJson(
+              businessId: businessId,
+              categoryId: categoryId,
+              includeStock: false,
+            ),
+          )
+          .eq('business_id', businessId)
+          .eq('id', productId)
+          .select(_productSelect)
+          .single(),
+      Product.fromJson,
+    );
   }
 
   Future<void> setProductActive({
@@ -151,16 +160,19 @@ class InventoryRepository {
     required String businessId,
     String? productId,
   }) async {
-    dynamic query =
-        _client.from('stock_movements').select().eq('business_id', businessId);
+    var query = _client.selectBusinessRows(
+      'stock_movements',
+      businessId: businessId,
+    );
 
     if (productId != null) {
       query = query.eq('product_id', productId);
     }
 
-    final rows = await query.order('created_at', ascending: false).limit(100)
-        as List<dynamic>;
-    return [for (final row in rows) StockMovement.fromJson(readMap(row))];
+    return mapRows(
+      query.order('created_at', ascending: false).limit(100),
+      StockMovement.fromJson,
+    );
   }
 
   Future<String?> _findOrCreateCategory({
@@ -171,21 +183,19 @@ class InventoryRepository {
     if (cleanedName.isEmpty) return null;
 
     final existingRows = await _client
-        .from('categories')
-        .select()
-        .eq('business_id', businessId)
+        .selectBusinessRows('categories', businessId: businessId)
         .ilike('name', cleanedName)
-        .limit(1) as List<dynamic>;
+        .limit(1);
 
     if (existingRows.isNotEmpty) {
       return existingRows.first['id'].toString();
     }
 
-    final row = await _client
+    final category = await _client
         .from('categories')
         .insert({'business_id': businessId, 'name': cleanedName})
         .select()
         .single();
-    return row['id'].toString();
+    return category['id'].toString();
   }
 }

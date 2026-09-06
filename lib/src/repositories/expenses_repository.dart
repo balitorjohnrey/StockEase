@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import 'repository_helpers.dart';
 
 class ExpensesRepository {
   ExpensesRepository(this._client);
@@ -12,8 +13,10 @@ class ExpensesRepository {
     DateTime? from,
     DateTime? to,
   }) async {
-    dynamic query =
-        _client.from('expenses').select().eq('business_id', businessId);
+    var query = _client.selectBusinessRows(
+      'expenses',
+      businessId: businessId,
+    );
 
     if (from != null) {
       query = query.gte(_expenseDateColumn, _dateOnly(from));
@@ -22,21 +25,24 @@ class ExpensesRepository {
       query = query.lte(_expenseDateColumn, _dateOnly(to));
     }
 
-    final rows =
-        await query.order('expense_date', ascending: false) as List<dynamic>;
-    return [for (final row in rows) Expense.fromJson(readMap(row))];
+    return mapRows(
+      query.order('expense_date', ascending: false),
+      Expense.fromJson,
+    );
   }
 
   Future<Expense> addExpense({
     required String businessId,
     required ExpenseInput input,
   }) async {
-    final row = await _client
-        .from('expenses')
-        .insert(input.toJson(businessId))
-        .select()
-        .single();
-    return Expense.fromJson(readMap(row));
+    return mapSingleRow(
+      _client
+          .from('expenses')
+          .insert(input.toJson(businessId))
+          .select()
+          .single(),
+      Expense.fromJson,
+    );
   }
 
   Future<void> deleteExpense({
