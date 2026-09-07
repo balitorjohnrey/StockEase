@@ -33,7 +33,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _refresh() {
-    setState(() => _summary = _load());
+    setState(() {
+      _summary = _load();
+    });
   }
 
   @override

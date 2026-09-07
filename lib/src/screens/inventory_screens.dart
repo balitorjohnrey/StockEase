@@ -52,7 +52,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   void _reload() {
     if (!mounted) return;
-    setState(() => _products = _load());
+    setState(() {
+      _products = _load();
+    });
   }
 
   @override
@@ -995,7 +997,9 @@ class _LowStockProductsScreenState extends State<LowStockProductsScreen> {
   }
 
   void _refresh() {
-    setState(() => _products = _load());
+    setState(() {
+      _products = _load();
+    });
   }
 
   @override

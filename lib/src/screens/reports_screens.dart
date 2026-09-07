@@ -34,7 +34,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   void _refresh() {
-    setState(() => _summary = _load());
+    setState(() {
+      _summary = _load();
+    });
   }
 
   @override
@@ -201,7 +203,9 @@ class _BestSellingProductsScreenState extends State<BestSellingProductsScreen> {
   }
 
   void _reload() {
-    setState(() => _future = _load());
+    setState(() {
+      _future = _load();
+    });
   }
 
   @override
@@ -367,7 +371,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   }
 
   void _reload() {
-    setState(() => _expenses = _load());
+    setState(() {
+      _expenses = _load();
+    });
   }
 
   @override

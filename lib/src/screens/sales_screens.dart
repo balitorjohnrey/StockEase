@@ -50,7 +50,9 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
   void _reload() {
     if (!mounted) return;
-    setState(() => _products = _loadProducts());
+    setState(() {
+      _products = _loadProducts();
+    });
   }
 
   void _addProduct(Product product) {
@@ -767,7 +769,9 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
 
   void _reload() {
     if (!mounted) return;
-    setState(() => _sales = _load());
+    setState(() {
+      _sales = _load();
+    });
   }
 
   @override
@@ -926,7 +930,9 @@ class _SaleDetailsScreenState extends State<SaleDetailsScreen> {
   }
 
   void _refresh() {
-    setState(() => _receipt = _load());
+    setState(() {
+      _receipt = _load();
+    });
   }
 
   @override
