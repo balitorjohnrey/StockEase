@@ -212,12 +212,20 @@ class _ProductsForSalePanel extends StatelessWidget {
               if (snapshot.hasError) {
                 return ErrorState(error: snapshot.error!, onRetry: onRetry);
               }
-              final rows = snapshot.data ?? const <Product>[];
+              final searchTerm = search.text.trim();
+              final rows = _matchingProducts(
+                snapshot.data ?? const <Product>[],
+                searchTerm,
+              );
               if (rows.isEmpty) {
-                return const EmptyState(
+                return EmptyState(
                   icon: Icons.search_off,
-                  title: 'No products available',
-                  message: 'Active products with stock appear here.',
+                  title: searchTerm.isEmpty
+                      ? 'No products available'
+                      : 'No products found',
+                  message: searchTerm.isEmpty
+                      ? 'Active products with stock appear here.'
+                      : 'Try another product name, SKU, or barcode.',
                 );
               }
               return ListView.separated(
@@ -263,6 +271,17 @@ class _ProductsForSalePanel extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  List<Product> _matchingProducts(List<Product> products, String searchTerm) {
+    if (searchTerm.isEmpty) return products;
+
+    final normalized = searchTerm.toLowerCase();
+    return products.where((product) {
+      return product.name.toLowerCase().contains(normalized) ||
+          (product.sku?.toLowerCase().contains(normalized) ?? false) ||
+          (product.barcode?.toLowerCase().contains(normalized) ?? false);
+    }).toList();
   }
 }
 
