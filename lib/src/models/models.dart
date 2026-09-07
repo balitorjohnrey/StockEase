@@ -409,23 +409,29 @@ class DashboardSummary {
     required this.todaySales,
     required this.monthSales,
     required this.transactionCount,
+    required this.monthTransactionCount,
     required this.totalProducts,
     required this.lowStockProducts,
     required this.outOfStockProducts,
     required this.estimatedGrossProfit,
     required this.recentSales,
     required this.salesChart,
+    required this.profitChart,
+    required this.transactionChart,
   });
 
   final double todaySales;
   final double monthSales;
   final int transactionCount;
+  final int monthTransactionCount;
   final int totalProducts;
   final int lowStockProducts;
   final int outOfStockProducts;
   final double estimatedGrossProfit;
   final List<SaleSummary> recentSales;
   final List<ChartPoint> salesChart;
+  final List<ChartPoint> profitChart;
+  final List<ChartPoint> transactionChart;
 }
 
 class BestSeller {

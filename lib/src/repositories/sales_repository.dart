@@ -101,6 +101,12 @@ class SalesRepository {
       businessId,
       activeOnly: true,
     );
+    final trendSales = await fetchSales(
+      businessId,
+      fromUtc: todayStart.subtract(const Duration(days: 6)),
+      toUtc: tomorrowStart,
+      limit: 1000,
+    );
     final monthSales = await fetchSales(
       businessId,
       fromUtc: monthStart,
@@ -118,6 +124,7 @@ class SalesRepository {
       todaySales: todaySales.fold(0, (sum, sale) => sum + sale.totalAmount),
       monthSales: monthSales.fold(0, (sum, sale) => sum + sale.totalAmount),
       transactionCount: todaySales.length,
+      monthTransactionCount: monthSales.length,
       totalProducts: products.length,
       lowStockProducts: products.where((product) => product.isLowStock).length,
       outOfStockProducts:
@@ -125,7 +132,18 @@ class SalesRepository {
       estimatedGrossProfit:
           monthSales.fold(0, (sum, sale) => sum + sale.estimatedGrossProfit),
       recentSales: recentSales,
-      salesChart: _dailyChart(monthSales),
+      salesChart: _dailyChart(
+        trendSales,
+        valueFor: (sale) => sale.totalAmount,
+      ),
+      profitChart: _dailyChart(
+        trendSales,
+        valueFor: (sale) => sale.estimatedGrossProfit,
+      ),
+      transactionChart: _dailyChart(
+        trendSales,
+        valueFor: (_) => 1,
+      ),
     );
   }
 
@@ -193,7 +211,10 @@ class SalesRepository {
     );
   }
 
-  List<ChartPoint> _dailyChart(List<SaleSummary> sales) {
+  List<ChartPoint> _dailyChart(
+    List<SaleSummary> sales, {
+    required double Function(SaleSummary sale) valueFor,
+  }) {
     final start = manilaDayStartUtc().subtract(const Duration(days: 6));
     final buckets = <DateTime, double>{
       for (var i = 0; i < 7; i++) start.add(Duration(days: i)): 0,
@@ -202,7 +223,7 @@ class SalesRepository {
     for (final sale in sales) {
       final day = manilaDayStartUtc(sale.createdAt);
       if (buckets.containsKey(day)) {
-        buckets[day] = buckets[day]! + sale.totalAmount;
+        buckets[day] = buckets[day]! + valueFor(sale);
       }
     }
 
