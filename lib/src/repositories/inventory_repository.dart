@@ -84,6 +84,11 @@ class InventoryRepository {
     required String businessId,
     required ProductInput input,
   }) async {
+    await _ensureProductNameAvailable(
+      businessId: businessId,
+      name: input.name,
+    );
+
     final categoryId = await _findOrCreateCategory(
       businessId: businessId,
       name: input.categoryName,
@@ -104,6 +109,12 @@ class InventoryRepository {
     required String productId,
     required ProductInput input,
   }) async {
+    await _ensureProductNameAvailable(
+      businessId: businessId,
+      name: input.name,
+      exceptProductId: productId,
+    );
+
     final categoryId = await _findOrCreateCategory(
       businessId: businessId,
       name: input.categoryName,
@@ -198,4 +209,46 @@ class InventoryRepository {
         .single();
     return category['id'].toString();
   }
+
+  Future<void> _ensureProductNameAvailable({
+    required String businessId,
+    required String name,
+    String? exceptProductId,
+  }) async {
+    final cleanedName = name.trim();
+    if (cleanedName.isEmpty) return;
+
+    var query = _client
+        .selectBusinessRows(
+          'products',
+          businessId: businessId,
+          columns: 'id,name',
+        )
+        .ilike('name', _escapeLikePattern(cleanedName));
+
+    if (exceptProductId != null) {
+      query = query.neq('id', exceptProductId);
+    }
+
+    final rows = await query.limit(1);
+    if (rows.isNotEmpty) {
+      throw DuplicateProductNameException(cleanedName);
+    }
+  }
+
+  String _escapeLikePattern(String value) {
+    return value
+        .replaceAll('\\', '\\\\')
+        .replaceAll('%', '\\%')
+        .replaceAll('_', '\\_');
+  }
+}
+
+class DuplicateProductNameException implements Exception {
+  const DuplicateProductNameException(this.productName);
+
+  final String productName;
+
+  @override
+  String toString() => 'A product named "$productName" already exists.';
 }
