@@ -5,7 +5,8 @@ create table if not exists public.businesses (
   owner_id uuid not null references auth.users(id) on delete cascade,
   name text not null check (char_length(trim(name)) > 0),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (owner_id)
 );
 
 create table if not exists public.business_members (
@@ -220,10 +221,39 @@ begin
 end;
 $$;
 
+create or replace function public.prevent_multiple_business_profiles()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  perform pg_advisory_xact_lock(hashtextextended(new.owner_id::text, 0));
+
+  if exists (
+    select 1
+    from public.businesses
+    where owner_id = new.owner_id
+      and id <> coalesce(new.id, '00000000-0000-0000-0000-000000000000'::uuid)
+  ) then
+    raise exception 'Each user can only have one business profile.'
+      using errcode = '23505';
+  end if;
+
+  return new;
+end;
+$$;
+
 drop trigger if exists businesses_touch_updated_at on public.businesses;
 create trigger businesses_touch_updated_at
 before update on public.businesses
 for each row execute function public.touch_updated_at();
+
+drop trigger if exists businesses_prevent_multiple_profiles
+  on public.businesses;
+create trigger businesses_prevent_multiple_profiles
+before insert or update of owner_id on public.businesses
+for each row execute function public.prevent_multiple_business_profiles();
 
 drop trigger if exists categories_touch_updated_at on public.categories;
 create trigger categories_touch_updated_at
@@ -249,10 +279,6 @@ as $$
   select exists (
     select 1 from public.businesses b
     where b.id = target_business_id and b.owner_id = auth.uid()
-  )
-  or exists (
-    select 1 from public.business_members bm
-    where bm.business_id = target_business_id and bm.user_id = auth.uid()
   );
 $$;
 
@@ -279,9 +305,22 @@ create policy "businesses_update_own" on public.businesses
 for update using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
 drop policy if exists "members_access" on public.business_members;
-create policy "members_access" on public.business_members
-for all using (public.user_has_business_access(business_id))
-with check (public.user_has_business_access(business_id));
+drop policy if exists "business_members_owner_read" on public.business_members;
+create policy "business_members_owner_read" on public.business_members
+for select using (public.user_has_business_access(business_id));
+
+drop policy if exists "business_members_owner_self_insert"
+  on public.business_members;
+create policy "business_members_owner_self_insert" on public.business_members
+for insert with check (
+  user_id = auth.uid()
+  and exists (
+    select 1
+    from public.businesses b
+    where b.id = business_id
+      and b.owner_id = auth.uid()
+  )
+);
 
 drop policy if exists "categories_business_access" on public.categories;
 create policy "categories_business_access" on public.categories

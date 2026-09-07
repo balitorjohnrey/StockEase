@@ -112,6 +112,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
   }
 
   Future<void> _submit() async {
+    if (_loading || context.appState.isBusy) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {

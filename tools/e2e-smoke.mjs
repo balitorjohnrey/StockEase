@@ -66,6 +66,17 @@ const business = businessInsert.data;
 assert(business?.id, 'Business insert returned no id');
 ok('business setup insert works');
 
+const duplicateBusinessInsert = await supabase
+  .from('businesses')
+  .insert({ owner_id: userId, name: `${businessName} Duplicate` })
+  .select()
+  .single();
+assert(
+  duplicateBusinessInsert.error,
+  'Second business insert should be blocked for the same user',
+);
+ok('second business profile insert is blocked');
+
 const memberFetch = await supabase
   .from('business_members')
   .select()

@@ -90,6 +90,9 @@ class AppState extends ChangeNotifier {
     final currentUser = user;
     if (currentUser == null) return;
     await _guard(() async {
+      await _loadBusiness();
+      if (_business != null) return;
+
       _business = await businesses.create(ownerId: currentUser.id, name: name);
     });
   }
